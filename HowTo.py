@@ -5,6 +5,8 @@
 # The tutorial is here:
 # https://blog.roboflow.com/how-to-train-yolov5-on-a-custom-dataset/
 
+# (to save requirements: pip freeze > requirements.txt)
+
 # How to check for PyTorch installation and GPU compatability:
 
 import torch
