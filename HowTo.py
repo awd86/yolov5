@@ -6,12 +6,13 @@
 # https://blog.roboflow.com/how-to-train-yolov5-on-a-custom-dataset/
 
 # How to check for PyTorch installation and GPU compatability:
+
 import torch
 print('torch %s %s' % (torch.__version__, torch.cuda.get_device_properties(0) if torch.cuda.is_available() else 'CPU'))
-
+#
 # To check the local Cuda version, use the terminal"
 # nvcc --version
-
+#
 # To download the Udacity Self Driving Car Dataset in Yolov5 Pytorch Format:
 # https://public.roboflow.com/ds/h0zYn5zFuK?key=tRsZIfO1Cg
 # curl -L "https://public.roboflow.com/ds/h0zYn5zFuK?key=tRsZIfO1Cg" > roboflow.zip; unzip roboflow.zip; rm roboflow.zip
@@ -51,4 +52,21 @@ def writetemplate(line, cell):
 # %%time
 # %cd /content/yolov5/
 #!python train.py --img 416 --batch 16 --epochs 100 --data {dataset.location}/data.yaml --cfg ./models/custom_yolov5s.yaml --weights '' --name yolov5s_results  --cache
-# !python train.py --img [1920,1200] --batch 16 --epochs 100 --data {yolov5.data_car}/data.yaml --cfg ./models/custom_yolov5s.yaml --weights '' --name yolov5s_results  --cache
+
+import time
+start = time.time()
+
+# copy/paste this into the terminal  # TODO find out how to execute this from a *.py
+!python train --img 1920 --rect --batch 16 --epochs 100 --data ./data_car/data.yaml --cfg ./models/custom_yolov5s.yaml --weights '' --name yolov5s_results  --cache
+
+
+# import train
+# train(img=1920,batch=16,epochs=100,data='./data_car/data.yaml',cfg='./models/custom_yolov5s.yaml',name='yolov5s_results',cache=True)
+
+# the "--rect" is per this reference: https://github.com/ultralytics/yolov5/issues/700
+# the 'RuntimeError: non-positive stride is not supported' is here: https://github.com/ultralytics/yolov5/issues/1671
+# the 'Invalid Syntax...async' was here: https://stackoverflow.com/questions/60842431/python3-8-use-async-getting-invalid-sysntax
+
+# there was a major issue with the "custom_yolov5s.yaml" file - I don't remember how it was created
+# the data needs to be in 3 folders: train, test, valid
+# RAM overload: " resource_tracker: There appear to be 6 leaked semaphore objects to clean up at shutdown"
