@@ -14,8 +14,8 @@ source_dir = "./data_given"
 order = ['train', 'valid']
 
 label_file = {
-    'train': "./data_given/udacity_driving_datasets/labels_train.csv",
-    'valid': "./data_given/udacity_driving_datasets/labels_val.csv",
+    'train': "./data_given/labels_train.csv",
+    'valid': "./data_given/labels_val.csv",
 }
 
 
@@ -56,7 +56,7 @@ for mode in order:
 
         # move the image (if not already done)
         if not os.path.exists(f"./data_given/{mode}/images/{line['frame']}"):
-            os.rename(f"./data_given/udacity_driving_datasets/{line['frame']}", f"./data_given/{mode}/images/{line['frame']}")  # CAUTION - this will delete the original
+            os.rename(f"./data_given/{line['frame']}", f"./data_given/{mode}/images/{line['frame']}")  # CAUTION - this will delete the original
             #print(f'{line["frame"]} has been moved to {source_dir}/test/images/')
 
         #print(f'{source_dir}/test/labels/{line["frame"]}.txt has been written')

@@ -1,5 +1,5 @@
-train: ../train/images
-val: ../valid/images
+train: ./data_rbc/train/images
+val: ./data_rbc/valid/images
 
 nc: 3
 names: ['Platelets', 'RBC', 'WBC']
