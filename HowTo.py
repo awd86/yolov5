@@ -59,7 +59,7 @@ import time
 start = time.time()
 
 # copy/paste this into the terminal  # TODO find out how to execute this from a *.py
-!python train.py --img 416 --rect --batch 16 --epochs 100 --data ./data_RBC/data.yaml --cfg ./models/customRBC_yolov5m.yaml --weights '' --name yolov5s_results  --cache
+!python3 train.py --img 416 --rect --batch 8 --epochs 100 --data ./data_RBC/data.yaml --cfg ./models/customRBC_yolov5m.yaml --weights '' --name yolov5m_results  --cache
 
 
 # import train
