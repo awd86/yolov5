@@ -248,3 +248,8 @@ com_crashlytics_export_strings.xml
 crashlytics.properties
 crashlytics-build.properties
 fabric.properties
+/data_given/train/images/
+/data_given/test/images/
+/data_RBC/test/images/
+/data_RBC/train/images/
+/data_RBC/valid/images/
