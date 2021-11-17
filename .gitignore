@@ -253,3 +253,6 @@ fabric.properties
 /data_RBC/test/images/
 /data_RBC/train/images/
 /data_RBC/valid/images/
+/data_car_sub/test/images/
+/data_car_sub/train/images/
+/data_car_sub/valid/images/
