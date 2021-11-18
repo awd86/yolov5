@@ -48,15 +48,16 @@ for mode in order:
     for line in tqdm(list(input_file)):
         # print(line)
         # print(line['LabelName'],classes_coded.index(line['LabelName']))
+        img_number = line['frame'].replace('.txt','')  # strips the '.txt' from the end of the file name
 
         # open/make a new txt file for the given image
-        with open(f"./data_given/{mode}/labels/{line['frame']}.txt",'w') as labels:
+        with open(f"{source_dir}/{mode}/labels/{img_number}.txt",'w') as labels:
             # format from https://medium.com/nerd-for-tech/day-86-dl-custom-object-detector-setup-yolov5-4f5539dd7e9a
             labels.write(' '.join([str(classes_coded.index(line['class_id'])), str(( float(line['xmax'])+float(line['xmin'])) /2 ), str(( float(line['ymax'])+float(line['ymin'])) /2 ),str(float(line['xmax'])-float(line['xmin'])),str(float(line['ymax'])-float(line['ymin']))])+'\n')
 
         # move the image (if not already done)
-        if not os.path.exists(f"./data_given/{mode}/images/{line['frame']}"):
-            os.rename(f"./data_given/{line['frame']}", f"./data_given/{mode}/images/{line['frame']}")  # CAUTION - this will delete the original
+        if not os.path.exists(f"{source_dir}/{mode}/images/{img_number}.jpg"):
+            os.rename(f"{source_dir}/{img_number}.jpg", f"{source_dir}/{mode}/images/{img_number}.jpg")  # CAUTION - this will delete the original
             #print(f'{line["frame"]} has been moved to {source_dir}/test/images/')
 
         #print(f'{source_dir}/test/labels/{line["frame"]}.txt has been written')

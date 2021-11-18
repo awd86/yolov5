@@ -61,7 +61,10 @@ start = time.time()
 # copy/paste this into the terminal  # TODO find out how to execute this from a *.py
 #!python3 train.py --img 416 --rect --batch 8 --epochs 10 --data ./data_given/data.yaml --cfg ./models/customCAR_yolov5l.yaml --weights '' --name yolov5l_results  --cache
 #!python3 -m torch.distributed.launch --nproc_per_node 2 train.py --img 1920 --rect --batch 2 --epochs 10 --data ./data_car/data.yaml --cfg ./models/customCAR_yolov5l.yaml --weights '' --name yolov5l_results  --cache
-!python3 train.py --img 480 --rect --batch 2 --epochs 10 --data ./data_car_sub/data.yaml --cfg ./models/customCAR_yolov5m.yaml --weights '' --name yolov5m_results  --cache
+#!python3 train.py --img 512 --batch 16 --epochs 100 --data ./data_car_small_sub/data.yaml --cfg ./models/customCAR_yolov5m.yaml --weights '' --name yolov5m_results  --cache
+#!python3 train.py --img 512 --batch 16 --epochs 100 --data ./data_car_small/data.yaml --cfg ./models/customCAR_yolov5m.yaml --weights '' --name yolov5m_results  --cache
+#!python3 train.py --img 512 --rect --batch 16 --epochs 100 --data ./data_given/data.yaml --cfg ./models/customCAR_yolov5m.yaml --weights '' --name yolov5m_results  --cache
+!python3 train.py --img 512 --batch 16 --epochs 1000 --data ./data_car_small_sub/data.yaml --cfg ./models/customCAR_yolov5x.yaml --weights '' --name yolov5x_results  --cache
 
 
 # import train
