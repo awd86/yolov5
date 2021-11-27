@@ -40,7 +40,7 @@ for mode in order:
 
 ##### Make a list of all image titles in the folder #####
 all_images = os.listdir(path=f'{source_img_dir}')  # ["[image number].jpg",...]
-all_images = [x.replace('.jpg','') for x in all_images]  # remove '.jpg' fro the titles
+all_images = [x.replace('.jpg','') for x in all_images]  # remove '.jpg' from the titles
 #print(all_images)
 
 
