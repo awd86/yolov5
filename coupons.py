@@ -14,6 +14,8 @@ from pathlib import Path
 from math import ceil
 from tqdm import tqdm
 
+# TODO create 'batch_clipper' function to pull an entire directory (and calculate auto_step)
+
 def clipper(**kwargs):
 
     # 'kwargs': (these are the only valid inputs)
@@ -61,7 +63,8 @@ def clipper(**kwargs):
 
     # Load File
     img = cv2.imread(image)
-    X, Y, L = img.shape
+    img_dim = img.shape[0:2]  # ignore depth
+    #X, Y, L = img.shape
     #print(f'Image dimensions are X={X}, Y={Y}')
     #cv2.imshow("original", img)
 
@@ -112,10 +115,10 @@ def clipper(**kwargs):
 
         # Convert from Normalized (0 to 1) x_ctr y_ctr x_width y_height
         #           to Absolute (min, max) X_ctr Y_ctr X_width Y_height
-        labels[:, 1] *= X  # x_ctr
-        labels[:, 2] *= Y  # y_ctr
-        labels[:, 3] *= X  # x_width
-        labels[:, 4] *= Y  # y_height
+        labels[:, 1] *= img_dim[0]  # x_ctr
+        labels[:, 2] *= img_dim[1]  # y_ctr
+        labels[:, 3] *= img_dim[0]  # x_width
+        labels[:, 4] *= img_dim[1]  # y_height
         #print(f"The absolute label dimensions are:\n{labels}")
 
 
@@ -166,7 +169,6 @@ def clipper(**kwargs):
             step = np.subtract(frame,overlap)
 
             # Adjust to perfect fit
-            img_dim = [X,Y]
             for n in [0,1]:
                 rem = img_dim[n]-frame[n]
                 if not rem % step[n] == 0:  # if there is any overlap, need one more frame
@@ -186,7 +188,23 @@ def clipper(**kwargs):
 
     ##### Clip Images (and Labels, if applicable) #####
 
-    cropped_image = img[0:frame[0], 0:frame[1]]
+    img_name = image.split('/')[-1].split('.')[0]  # drops all suffixes and loses file type
+    img_type = image.split('/')[-1].split('.')[-1]
+
+    steps = np.ceil( np.add( np.divide( np.subtract(img_dim,frame), step), 1) )
+
+    for y_trav in tqdm(range(steps.astype(int)[1])):
+        for x_trav in range(steps.astype(int)[0]):
+            _x = x_trav*step[0]
+            _y = y_trav*step[1]
+
+            # Clip Images
+            clip = img[_x:_x+frame[0], _y:_y+frame[1]]
+            cv2.imwrite(f"{img_dir}/{img_name}_{y_trav:03}_{x_trav:03}.{img_type}", clip)
+
+            # TODO Clip Labels
+
+    print(f"Created {int(steps[0]*steps[1])} new clipped images.")
 
     # Display cropped image
     #cv2.imshow("cropped", cropped_image)
@@ -199,6 +217,9 @@ def clipper(**kwargs):
 
 
     # TODO rename 'images' to 'original_images' and 'clipped_images' to 'images'
+
+
+# TODO create 'stitcher' to recombine coupons and labels
 
 ###### Testing ######
 img = 'data_xView/10.jpg'
