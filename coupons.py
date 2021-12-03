@@ -166,12 +166,21 @@ def clipper(**kwargs):
         if type(kwargs['step']) is not list:
             step = kwargs['step']
             step = [step,step]  # use same step for x & y
+        elif len(kwargs['step']) == 1:
+            step = list(kwargs['step'])
+            step = [step, step]
         else:
             step = list(kwargs['step'])  #accepts list[] or tuple()
 
         if len(step) > 2:
             step = step[0:2]  #only use first 2 entries
             print(f"Provided 'step' is too long. Using step={step}")
+
+        # handle percentages
+        for s in range(len(step)):
+            if step[s] <= 1 and not step[s] == 0:
+                # then 'step' has been given as a percentage
+                step[s] = frame[s]*step[s]  # normalize
 
         if 'overlap' in kwargs:  #overdedfined
             print(f"Both 'step' and 'overlap' provided. Only using step={step}")
@@ -187,6 +196,13 @@ def clipper(**kwargs):
             if len(overlap) > 2:
                 overlap = overlap[0:2]  # only use first 2 entries
                 print(f"Provided 'overlap' is too long. Using overlap={overlap}")
+
+            # handle percentages
+            for s in range(len(overlap)):
+                if overlap[s] <= 1 and not overlap[s] == 0:
+                    # then 'step' has been given as a percentage
+                    overlap[s] = frame[s] * overlap[s]  # normalize
+
             # convert to 'step'
             step = np.subtract(frame,overlap)
 
