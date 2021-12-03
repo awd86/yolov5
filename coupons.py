@@ -83,15 +83,20 @@ def clipper(**kwargs):
     ###### Load Labels #####
 
     # Find Label File
+
     if 'labels' in kwargs:
         # Load labels as numpy array
         labels = kwargs['labels']  # path and label.txt file
         if not os.path.exists(labels):
             print(f'Specified label file does not exist. \n\tCheck path: {labels}')
         labels = np.genfromtxt(labels,delimiter=' ')
-        if type(labels[0,1]) == str:
-            print('Label file is not in YOLO format!')
-            return
+        labels = np.atleast_2d(labels)
+        try:
+            if type(labels[0,1]) == str:
+                print('Label file is not in YOLO format!')
+                return
+        except:
+            print(f"failed on {labels}")
 
         # Convert from Normalized (0 to 1) x_ctr y_ctr x_width y_height
         #           to Absolute (min, max) X_ctr Y_ctr X_width Y_height
@@ -132,86 +137,86 @@ def clipper(**kwargs):
     if not batch:  # run if batch = False
 
         # Determine folder to parent 'clipped_images'
-        img_dir = Path(image).parent.absolute()
-        if 'images' == str(img_dir).split('/')[-1]:  # only finds lowest directory labeled 'images/'
-            par_dir = img_dir.parent.absolute()  # go up one level so that "clipped_images/" is parallel to "images/"
-        else:
-            par_dir = img_dir
+        par_dir = Path(image).parent.absolute()
+        if 'images' == str(par_dir).split('/')[-1]:  # only finds lowest directory labeled 'images/'
+            par_dir = par_dir.parent.absolute()  # go up one level so that "clipped_images/" is parallel to "images/"
 
         # Create the 'clipped_images' folder
+        global img_dir
         img_dir = Path(f'{par_dir}/clipped_images')
         if not os.path.exists(img_dir):
             os.mkdir(os.path.join(par_dir,'clipped_images'))
 
         # Create the 'clipped_labels' folder if applicable
         if 'labels' in kwargs:
+            global lbl_dir
             lbl_dir = Path(f'{par_dir}/clipped_labels')
             if not os.path.exists(lbl_dir):
                 os.mkdir(os.path.join(par_dir, 'clipped_labels'))
 
 
     ##### Determine step size #####
-    if not batch:  # run if batch = False
+    #if not batch:  # run if batch = False  # without the below, steps is not defined
 
-        # Determine Step Size
-        if ('step' in kwargs or 'overlap' in kwargs) and 'auto_step' in kwargs:
-            print("'auto_step' is incompatible with 'step' and 'overlap' and is not being used")
+    # Determine Step Size
+    if ('step' in kwargs or 'overlap' in kwargs) and 'auto_step' in kwargs:
+        print("'auto_step' is incompatible with 'step' and 'overlap' and is not being used")
 
-        if 'step' in kwargs:  # step is the value that will be used
-            if type(kwargs['step']) is not list:
-                step = kwargs['step']
-                step = [step,step]  # use same step for x & y
+    if 'step' in kwargs:  # step is the value that will be used
+        if type(kwargs['step']) is not list:
+            step = kwargs['step']
+            step = [step,step]  # use same step for x & y
+        else:
+            step = list(kwargs['step'])  #accepts list[] or tuple()
+
+        if len(step) > 2:
+            step = step[0:2]  #only use first 2 entries
+            print(f"Provided 'step' is too long. Using step={step}")
+
+        if 'overlap' in kwargs:  #overdedfined
+            print(f"Both 'step' and 'overlap' provided. Only using step={step}")
+
+    else:
+        if 'overlap' in kwargs:
+            if type(kwargs['overlap']) is not list:
+                overlap = kwargs['overlap']
+                overlap = [overlap, overlap]  # use same step for x & y
             else:
-                step = list(kwargs['step'])  #accepts list[] or tuple()
+                overlap = list(kwargs['overlap'])  # accepts list[] or tuple()
 
-            if len(step) > 2:
-                step = step[0:2]  #only use first 2 entries
-                print(f"Provided 'step' is too long. Using step={step}")
+            if len(overlap) > 2:
+                overlap = overlap[0:2]  # only use first 2 entries
+                print(f"Provided 'overlap' is too long. Using overlap={overlap}")
+            # convert to 'step'
+            step = np.subtract(frame,overlap)
 
-            if 'overlap' in kwargs:  #overdedfined
-                print(f"Both 'step' and 'overlap' provided. Only using step={step}")
+        elif 'labels' in kwargs:  # determine overlap based on max bbox (1.2*)
+            w_max = np.max(a=labels[:,3],axis=0)  # find max bbox width in absolute px
+            h_max = np.max(a=labels[:,4],axis=0)
+            #print(f"max bbox dimensions are {[w_max,h_max]}")
+
+            # Calculate the minimum overlap
+            if 'auto_step' in kwargs:
+                overlap = np.multiply([w_max,h_max],kwargs['auto_step'])  # handles 1 or 2D auto_step
+            else:
+                overlap = np.multiply([w_max, h_max], 1.2).astype(int)
+            step = np.subtract(frame,overlap)
+
+            # Adjust to perfect fit
+            for n in [0,1]:
+                rem = img_dim[n]-frame[n]
+                if not rem % step[n] == 0:  # if there is any overlap, need one more frame
+                    ct = rem // step[n] +1  # make one more column
+                    step[n] = ceil(rem / ct )  # round up to nearest int  # TODO finish end cell treatments
+
+            print(f"'auto_step' has calculated an optimal multipliers of {[(frame[0]-step[0])/w_max,(frame[1]-step[1])/h_max]}")
 
         else:
-            if 'overlap' in kwargs:
-                if type(kwargs['overlap']) is not list:
-                    overlap = kwargs['overlap']
-                    overlap = [overlap, overlap]  # use same step for x & y
-                else:
-                    overlap = list(kwargs['overlap'])  # accepts list[] or tuple()
+            step = np.multiply(0.75,frame)  # ensure integer (no partial pixels)
+            step = np.ceil(step).astype(int)  # roudn up to ensure overflow (no pixels dropped)
+            print(f'No step size provided. Using step=0.75*frame : step={step}')
 
-                if len(overlap) > 2:
-                    overlap = overlap[0:2]  # only use first 2 entries
-                    print(f"Provided 'overlap' is too long. Using overlap={overlap}")
-                # convert to 'step'
-                step = np.subtract(frame,overlap)
-
-            elif 'labels' in kwargs:  # determine overlap based on max bbox (1.2*)
-                w_max = np.max(a=labels[:,3],axis=0)  # find max bbox width in absolute px
-                h_max = np.max(a=labels[:,4],axis=0)
-                #print(f"max bbox dimensions are {[w_max,h_max]}")
-
-                # Calculate the minimum overlap
-                if 'auto_step' in kwargs:
-                    overlap = np.multiply([w_max,h_max],kwargs['auto_step'])  # handles 1 or 2D auto_step
-                else:
-                    overlap = np.multiply([w_max, h_max], 1.2).astype(int)
-                step = np.subtract(frame,overlap)
-
-                # Adjust to perfect fit
-                for n in [0,1]:
-                    rem = img_dim[n]-frame[n]
-                    if not rem % step[n] == 0:  # if there is any overlap, need one more frame
-                        ct = rem // step[n] +1  # make one more column
-                        step[n] = ceil(rem / ct )  # round up to nearest int  # TODO finish end cell treatments
-
-                print(f"'auto_step' has calculated an optimal multipliers of {[(frame[0]-step[0])/w_max,(frame[1]-step[1])/h_max]}")
-
-            else:
-                step = np.multiply(0.75,frame)  # ensure integer (no partial pixels)
-                step = np.ceil(step).astype(int)  # roudn up to ensure overflow (no pixels dropped)
-                print(f'No step size provided. Using step=0.75*frame : step={step}')
-
-        print(f'step={step}')
+    #print(f'step={step}')
 
 
     ##### Clip Images (and Labels, if applicable) #####
@@ -221,7 +226,7 @@ def clipper(**kwargs):
 
     steps = np.ceil( np.add( np.divide( np.subtract(img_dim,frame), step), 1) )
 
-    for y_trav in tqdm(range(steps.astype(int)[1])):
+    for y_trav in range(steps.astype(int)[1]):
         for x_trav in range(steps.astype(int)[0]):
             _x = x_trav*step[0]
             _y = y_trav*step[1]
@@ -276,7 +281,7 @@ def clipper(**kwargs):
                             label_rel[2] = y_ctr/frame[1]
                             label_rel[3] = x_width/frame[0]
                             label_rel[4] = y_height/frame[1]
-                            #print(f"label_rel {y_trav:03}_{x_trav:03} in norm YOLO is:\n{label_rel}")
+                            #print(f"label_rel {img_name}_{y_trav:03}_{x_trav:03} in norm YOLO is:\n{label_rel}")
 
                             if clip_labels.all() == 0:  # if no data yet
                                 clip_labels = labels[row,:]  # first row
@@ -296,7 +301,8 @@ def clipper(**kwargs):
             except:
                 pass
 
-    print(f"Created {int(steps[0]*steps[1])} new clipped images.")
+    #print(f"Created {int(steps[0]*steps[1])} new clipped images.")
+
 
 
 
@@ -342,11 +348,14 @@ def wrapfill(img,wrap_img):
 def batch_clip(img_dir, **kwargs):
     # kwargs includes lbl_dir
 
+    print('Running clipper in batch mode.\n')
+
     # gather images
     images = []
     for file in os.listdir(path=f'{img_dir}'):  # ["[image number].tif",...]
-        if file.endswith('.jpg' or '.tif'):
+        if file.endswith('.tif' or '.jpg'):
             images.append(f'{img_dir}/{file}')
+    #print(f'Images are titled:\n{images}')
 
     # attempt to gather labels
     try:
@@ -363,7 +372,7 @@ def batch_clip(img_dir, **kwargs):
     # Pass images and labels into clipper
     batch = False
 
-    for img in images:
+    for img in tqdm(images):
         kwargs['image'] = img
         kwargs['batch'] = batch
 
@@ -377,7 +386,7 @@ def batch_clip(img_dir, **kwargs):
                 print(f"Label file {lbl} not found")
                 del lbl
 
-        print(f'\nPassing this to clipper:\n{kwargs}\n')
+        #print(f'\nPassing this to clipper:\n{kwargs}\n')
         clipper(**kwargs)  # runs once per image
 
         batch = True  # this way one-time features will be turned off after first cycle
@@ -388,4 +397,6 @@ img = 'data_xView/10.jpg'
 lbl = 'data_xView/10.txt'
 
 #clipper(image=img, frame=[512,512], labels=lbl)
-batch_clip(img_dir='data_xView', lbl_dir = 'data_xView', frame = [512,512])
+batch_clip(img_dir='data_xView/images/train', lbl_dir = 'data_xView/labels/train', frame = [512,512], overlap=[50,50])
+
+# TODO allow step and overlap to be input as percentages
