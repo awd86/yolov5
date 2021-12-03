@@ -256,3 +256,5 @@ fabric.properties
 /data_car_sub/test/images/
 /data_car_sub/train/images/
 /data_car_sub/valid/images/
+/data_xView/clipped_images/
+/data_xView/clipped_labels/
