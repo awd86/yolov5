@@ -136,23 +136,23 @@ def clipper(**kwargs):
     ###### Folder Management #####
     if not batch:  # run if batch = False
 
-        # Determine folder to parent 'clipped_images'
+        # Determine folder to parent 'images'
         par_dir = Path(image).parent.absolute()
         if 'images' == str(par_dir).split('/')[-1]:  # only finds lowest directory labeled 'images/'
-            par_dir = par_dir.parent.absolute()  # go up one level so that "clipped_images/" is parallel to "images/"
+            par_dir = par_dir.parent.absolute()  # go up one level so that "images/" is parallel to "images/"
 
-        # Create the 'clipped_images' folder
+        # Create the 'images' folder
         global img_dir
-        img_dir = Path(f'{par_dir}/clipped_images')
+        img_dir = Path(f'{par_dir}/images')
         if not os.path.exists(img_dir):
-            os.mkdir(os.path.join(par_dir,'clipped_images'))
+            os.mkdir(os.path.join(par_dir,'images'))
 
-        # Create the 'clipped_labels' folder if applicable
+        # Create the 'labels' folder if applicable
         if 'labels' in kwargs:
             global lbl_dir
-            lbl_dir = Path(f'{par_dir}/clipped_labels')
+            lbl_dir = Path(f'{par_dir}/labels')
             if not os.path.exists(lbl_dir):
-                os.mkdir(os.path.join(par_dir, 'clipped_labels'))
+                os.mkdir(os.path.join(par_dir, 'labels'))
 
 
     ##### Determine step size #####
@@ -284,16 +284,17 @@ def clipper(**kwargs):
                             #print(f"label_rel {img_name}_{y_trav:03}_{x_trav:03} in norm YOLO is:\n{label_rel}")
 
                             if clip_labels.all() == 0:  # if no data yet
-                                clip_labels = labels[row,:]  # first row
+                                clip_labels = label_rel[:]  # first row
                                 #print(f'first row filled:\n{clip_labels}')
                             else:
-                                clip_labels = np.vstack([clip_labels, labels[row, :]])
+                                clip_labels = np.vstack([clip_labels, label_rel[:]])
                                 #print(f'row added:\n{clip_labels}')
                             #print(f"clip_labels {y_trav:03}_{x_trav:03} is:\n{clip_labels}")
 
                 # If no labels, make the file blank (YOLO format)
                 if clip_labels.all() == 0:
                     clip_labels = np.array([])
+                    #print(f"Clip labels have been deleted")
 
                 # Write Label file
                 np.savetxt(f"{lbl_dir}/{img_name}_{y_trav:03}_{x_trav:03}.txt", np.atleast_2d(clip_labels), delimiter=' ', newline='\n', encoding=None)
@@ -311,19 +312,19 @@ def rename_folders(par_dir):
     try:
         os.rename(f'{par_dir}/images',f'{par_dir}/original_images')
     except:
-        print("No original 'labels' found found in parent directory. Renaming 'clipped_images' to 'images'")
+        print("No original 'labels' found found in parent directory. Renaming 'images' to 'images'")
 
     try:
-        os.rename(f'{par_dir}/clipped_images',f'{par_dir}/images')
+        os.rename(f'{par_dir}/images',f'{par_dir}/images')
     except:
-        print("No 'clipped_images' folder found to rename.")
+        print("No 'images' folder found to rename.")
 
     # Rename 'labels' folders
     try:  # there may not be a labels file
         os.path.exists(f'{par_dir}/labels')
         try:
             os.rename(f'{par_dir}/labels', f'{par_dir}/original_labels')
-            os.rename(f'{par_dir}/clipped_labels',f'{par_dir}/labels')
+            os.rename(f'{par_dir}/labels',f'{par_dir}/labels')
         except:
             print("No 'labels' folder found.")
     except:

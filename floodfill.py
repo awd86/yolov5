@@ -15,7 +15,7 @@ def blackfill(img, frame, color=(0,0,0,0)):
     return new_img
 
 frame = [512,512]
-#test_image = Image.open('data_xView/clipped_images/10_008_007.jpg')
-test_image = cv2.imread('data_xView/clipped_images/10_008_007.jpg')
+#test_image = Image.open('data_xView/images/10_008_007.jpg')
+test_image = cv2.imread('data_xView/images/10_008_007.jpg')
 new_image = blackfill(test_image,frame)
 new_image.imshow()
