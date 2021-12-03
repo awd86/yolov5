@@ -405,15 +405,40 @@ def batch_clip(img_dir, **kwargs):
 
         #print(f'\nPassing this to clipper:\n{kwargs}\n')
         clipper(**kwargs)  # runs once per image
-
         batch = True  # this way one-time features will be turned off after first cycle
 
+
+# TODO allow step and overlap to be input as percentages
+
+# TODO build 'autosplit_train.txt' and 'autosplit_val.txt' for new data
+def autosplit_txt(img_dir):
+
+    # find parent to dir and place new file parallel to dir
+    src_dir = Path(img_dir).parent.absolute()
+    img_dir = img_dir.split('/')[-1]
+
+    # collect image file names
+    image_files = []
+    for file in os.listdir(path=f'{src_dir}/{img_dir}'):  # ["[image number].tif",...]
+        if file.endswith('.tif' or '.jpg'):
+            image_files.append(f'./{img_dir}/{file}')
+
+    # force into column-wise format
+    image_files = np.atleast_2d(image_files).T
+
+    # save new autosplit file
+    #print(f"image files are:\n{image_files}")
+    np.savetxt(f"{src_dir}/autosplit_{img_dir}.txt", np.atleast_2d(image_files), delimiter=' ', newline='\n',
+               encoding=None, fmt="%s")
+
+    print(f"New autosplit file has been created here:\n{src_dir}")
 
 ###### Testing ######
 img = 'data_xView/10.jpg'
 lbl = 'data_xView/10.txt'
 
 #clipper(image=img, frame=[512,512], labels=lbl)
-batch_clip(img_dir='data_xView/images/train', lbl_dir = 'data_xView/labels/train', frame = [512,512], overlap=[50,50])
+#batch_clip(img_dir='data_xView/images/train', lbl_dir = 'data_xView/labels/train', frame = [512,512], overlap=[50,50])
+#batch_clip(img_dir='data_xView/original_images/val', frame = [512,512], overlap=[50,50])
 
-# TODO allow step and overlap to be input as percentages
+autosplit_txt('data_xView/images/val')
