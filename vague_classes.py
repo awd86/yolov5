@@ -1,7 +1,7 @@
 import numpy as np
 
 
-names = [
+org_cls_names = [
     'Fixed-wing Aircraft',
     'Small Aircraft',
     'Cargo Plane',
@@ -41,7 +41,7 @@ names = [
     'Damaged Building',
     'Facility',
     'Construction Site',
-    'Vehicle Lot', 54
+    'Vehicle Lot',
     'Helipad',
     'Storage Tank',
     'Shipping container lot',
@@ -50,7 +50,7 @@ names = [
     'Tower',
 ]
 
-# print(names)
+# print(org_cls_names)
 
 '''
 Manually Determine which classes are:
@@ -59,7 +59,8 @@ Manually Determine which classes are:
 3. 'too large'    > 15 m
 '''
 
-names2 = [
+# Manually-created re-labeling scheme
+new_cls_num = [
          1,
          1,
          3,
@@ -122,24 +123,58 @@ names2 = [
          3,
 ]
 
-names3 = names2.copy()
 
-for i in range(len(names2)):
-    blah[i]=i
-        if names2[i] == 1:
-                names3[i] = 'too small'
-        elif names2[i] == 2:
-                names3[i] = 'just right'
-        else:
-                names3[i] = 'too big'
 
-conversion = np.array([names2,names,names3]).T
+new_cls_name = new_cls_num.copy()
+org_cls_num = []
+
+for i in range(len(new_cls_num)):
+    org_cls_num.append(i)
+    if new_cls_num[i] == 1:
+        new_cls_name[i] = 'too small'
+    elif new_cls_num[i] == 2:
+        new_cls_name[i] = 'just right'
+    elif new_cls_num[i] == 3:
+        new_cls_name[i] = 'too big'
+    elif new_cls_num[i] == None:
+        new_cls_name[i] = None
+    else:
+        print(f'{new_cls_num[i]} not recognized')
+
+conversion = np.array([org_cls_num,new_cls_num,org_cls_names,new_cls_name]).T
 
 # print(conversion)
 #
-# print(names3)
-convert = {}
-for k in range(len(names2)):
-    convert[k]=names2[k]
+# print(new_cls_name)
 
-#print(convert)
+# What to keep
+keep_list = list(range(4,23))+list(range(39,48))+[55,57]
+
+convert_strip = {}
+for k in org_cls_num:
+    if k in keep_list:
+        convert_strip[k] = k
+    else:
+        convert_strip[k] = None
+
+# print(convert_strip)
+
+# create conversion dict
+convert_gl = {}
+for k in convert_strip.keys():
+    if convert_strip[k]:
+        convert_gl[k] = new_cls_num[k]
+    else:
+        convert_gl[k] = None
+
+# print(convert_gl)
+
+# great holyHandGrenade dict
+convert_hhg = {}
+for k in convert_gl.keys():
+    if convert_gl[k] == 2:  # if 'just right'
+        convert_hhg[k] = 1
+    else:
+        convert_hhg[k] = None
+
+# print(convert_hhg)
