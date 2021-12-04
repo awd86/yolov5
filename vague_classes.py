@@ -150,31 +150,36 @@ conversion = np.array([org_cls_num,new_cls_num,org_cls_names,new_cls_name]).T
 # What to keep
 keep_list = list(range(4,23))+list(range(39,48))+[55,57]
 
+###### Create stripped dict ######
 convert_strip = {}
 for k in org_cls_num:
     if k in keep_list:
         convert_strip[k] = k
     else:
         convert_strip[k] = None
-
 # print(convert_strip)
 
-# create conversion dict
+# Make a new class name list for the yaml
+strip_classes = []
+for k in keep_list:
+    strip_classes.append(org_cls_names[k])
+# print(strip_classes)
+
+
+###### create goldilocks dict ######
 convert_gl = {}
 for k in convert_strip.keys():
     if convert_strip[k]:
         convert_gl[k] = new_cls_num[k]
     else:
         convert_gl[k] = None
-
 # print(convert_gl)
 
-# great holyHandGrenade dict
+###### create holyHandGrenade dict ######
 convert_hhg = {}
 for k in convert_gl.keys():
     if convert_gl[k] == 2:  # if 'just right'
         convert_hhg[k] = 1
     else:
         convert_hhg[k] = None
-
 # print(convert_hhg)
