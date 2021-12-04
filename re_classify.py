@@ -8,6 +8,7 @@ import numpy as np
 import os
 import math
 import pandas as pd
+import warnings
 from pathlib import Path
 from vague_classes import convert_strip, convert_gl, convert_hhg  # this is the conversion dict
 
@@ -31,12 +32,14 @@ def goldilocks(lbl_dir,dest_dir,convert_dict):
     for _label in label_files:
 
         # load labels
-        try:
-            labels = np.genfromtxt(_label, delimiter=' ')
-        except:
-            labels = []
-        labels = np.atleast_2d(labels)
-        #print(labels)
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            try:
+                labels = np.genfromtxt(_label, delimiter=' ')
+            except:
+                labels = []
+            labels = np.atleast_2d(labels)
+            #print(labels)
 
         # swap values
         Labels = []
@@ -45,35 +48,32 @@ def goldilocks(lbl_dir,dest_dir,convert_dict):
 
             # key:value replacement
             _labels[:,0] = [convert_dict[cls] for cls in labels[:,0]]
-            #print(_labels)
+            # print(_labels)
 
             # remove None class lines
             for k in range(len(_labels[:,0])):
-                #print(f'k is {k}')
+                # print(f'k is {k}')
                 if not math.isnan(_labels[k,0]):  # if not None
-                    print(f'k is {k}, class is {_labels[k,0]}')
+                    # print(f'k is {k}, class is {_labels[k,0]}')
                     if Labels == []:  # if no data yet
                         Labels = _labels[k,:]  # first row
                     else:
                         Labels = np.vstack([Labels, _labels[k,:]])
 
-        # save modified labels with numpy
-        # np.savetxt(f"{dest_dir}/{_label.split('/')[-1]}", np.atleast_2d(labels), delimiter=' ', newline='\n', encoding=None)
-
-        # Convert the label array to a dataframe
+        # Convert the label array to a Pandas dataframe
         if not Labels == []:
             # print(Labels)
             Labels_pd = pd.DataFrame(np.atleast_2d(Labels),columns=['new class','xctr','yctr','xw','yh'])
             Labels_pd['new class'] = Labels_pd['new class'].map(lambda x: '%1.d' % x)  # no decimals in the 'new class' column
 
-            print(f"Pandas frame for {Labels_pd}")
+            print(f"Pandas frame:\n {Labels_pd}")
             # print(Labels_pd)
 
         else:  # If no labels, make the file blank (YOLO format)
             Labels = np.array([])
             Labels_pd = pd.DataFrame(np.atleast_2d(Labels))
 
-        # Write the label file
+        # Write the new label file
         Labels_pd.to_csv(f"{dest_dir}/{_label.split('/')[-1]}", sep=' ',header=None, index=False, float_format='%.6f')
 
     print(f'\n{len(label_files)} files converted to goldilocks values.')
