@@ -1,0 +1,5 @@
+train: /home/st1/PycharmProjects/yolov5/data_car_small_sub/train/images
+val: /home/st1/PycharmProjects/yolov5/data_car_small_sub/valid/images
+
+nc: 11
+names: ['biker', 'car', 'pedestrian', 'trafficLight', 'trafficLight-Green', 'trafficLight-GreenLeft', 'trafficLight-Red', 'trafficLight-RedLeft', 'trafficLight-Yellow', 'trafficLight-YellowLeft', 'truck']

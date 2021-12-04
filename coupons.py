@@ -9,6 +9,7 @@
 # Import packages
 import cv2
 from PIL import Image  # used in 'black_fill'
+import pandas as pd
 import numpy as np
 import os
 from pathlib import Path
@@ -64,9 +65,10 @@ def clipper(**kwargs):
 
     # Load File
     img = cv2.imread(image)
-    img_dim = img.shape[0:2]  # ignore depth
-    #X, Y, L = img.shape
-    #print(f'Image dimensions are X={X}, Y={Y}')
+    img_dim = list(img.shape[0:2])  # ignore depth ... omg, it's backwards
+    img_dim.reverse()  # to undo this crazy reverse
+    # print(f'Image dimensions are X={img_dim[0]}, Y={img_dim[1]}')
+    # print(img_dim)
     #cv2.imshow("original", img)
 
     # Determine box size
@@ -104,16 +106,16 @@ def clipper(**kwargs):
         labels[:, 2] *= img_dim[1]  # y_ctr
         labels[:, 3] *= img_dim[0]  # x_width
         labels[:, 4] *= img_dim[1]  # y_height
-        #print(f"The absolute label dimensions are:\n{labels}")
+        # print(f"The absolute label dimensions are:\n{labels}")  # correct after img_dim.reverse()
 
         # Convert alternate labels_minMax with x_min, x_Max, y_min, y_Max
         labels_minMax = labels.copy()
         labels_sub = labels.copy()
-        #print(f"labels is:\n{labels[0:4,:]}")
+        # print(f"labels is:\n{labels[0:4,:]}")
 
         labels_sub[:,3] /= 2  # half width
         labels_sub[:,4] /= 2  # half height
-        #print(f"labels_sub is:\n{labels_sub[0:4,:]}")
+        # print(f"labels_sub is:\n{labels_sub[0:4,:]}")
 
         labels_minMax[:, 3] = labels_minMax[:, 2]  # y_ctr
         labels_minMax[:, 2] = labels_minMax[:, 1]  # x_ctr
@@ -123,8 +125,8 @@ def clipper(**kwargs):
         labels_minMax[:, 2] += labels_sub[:,3]  # label's x_Max
         labels_minMax[:, 3] -= labels_sub[:,4]  # label's y_min
         labels_minMax[:, 4] += labels_sub[:,4]  # label's y_Max
+        # print(f"The labels_minMax are:\n{labels_minMax}")  # confirmed correct after img_dim.reverse()
 
-        #print(f"The labels_minMax are:\n{labels_minMax[0:4,:]}")
         del labels_sub  # manual trash collecting
 
     ##### Batch Management #####
@@ -222,8 +224,8 @@ def clipper(**kwargs):
             for n in [0,1]:
                 rem = img_dim[n]-frame[n]
                 if not rem % step[n] == 0:  # if there is any overlap, need one more frame
-                    ct = rem // step[n] +1  # make one more column
-                    step[n] = ceil(rem / ct )  # round up to nearest int  # TODO finish end cell treatments
+                    ct = rem // step[n] + 1  # make one more column
+                    step[n] = ceil(rem / ct)  # round up to nearest int  # TODO finish end cell treatments
 
             print(f"'auto_step' has calculated an optimal multipliers of {[(frame[0]-step[0])/w_max,(frame[1]-step[1])/h_max]}")
 
@@ -232,7 +234,7 @@ def clipper(**kwargs):
             step = np.ceil(step).astype(int)  # roudn up to ensure overflow (no pixels dropped)
             print(f'No step size provided. Using step=0.75*frame : step={step}')
 
-    #print(f'step={step}')
+    print(f'step={step}')
 
 
     ##### Clip Images (and Labels, if applicable) #####
@@ -263,60 +265,68 @@ def clipper(**kwargs):
                 else:
                     clip = blackfill(clip, frame)
 
-
             # Write Image
-            cv2.imwrite(f"{img_dir}/{img_name}_{y_trav:03}_{x_trav:03}.{img_type}", clip)
+            cv2.imwrite(f"{img_dir}/{img_name}_{x_trav:02}x{y_trav:02}_{_x}p{_y}.{img_type}", clip)
 
-            try:  # won't execute if no labels given
-                clip_labels = np.array([0, 0, 0, 0, 0])  # pre-allocate array
-                for row in range(len(labels[:,0])):  # count number of rows
+            # Clip Labels
+            #try:  # won't execute if no labels given
+            clip_labels = np.array([0, 0, 0, 0, 0])  # pre-allocate array
+            for row in range(len(labels[:,0])):  # count number of rows
 
-                    # Check for label containment in clip (based on absolute dimension of original image)
-                    #   structure of a 'labels_minMax' row is [class x_min x_Max y_min y_Max]
-                    if labels_minMax[row,1] >= _x and labels_minMax[row,2] <= (_x+frame[0]):  # x containment
-                        if labels_minMax[row,3] >= _y and labels_minMax[row,4] <= (_y+frame[1]):  # y containment (effectively another 'and' statement)
+                # Check for label containment in clip (based on absolute dimension of original image)
+                #   structure of a 'labels_minMax' row is [class x_min x_Max y_min y_Max]
+                if labels_minMax[row,1] >= _x and labels_minMax[row,2] <= (_x+frame[0]):  # x containment
+                    if labels_minMax[row,3] >= _y and labels_minMax[row,4] <= (_y+frame[1]):  # y containment (effectively another 'and' statement)
 
-                            # Pull in the entire row with absolute min/max
-                            label_rel = labels_minMax[row,:]
+                        # Pull in the entire row with absolute min/max
+                        label_rel = labels_minMax[row,:]
 
-                            # Set relative to frame
-                            label_rel[1] -= _x  # x_min
-                            label_rel[2] -= _x  # x_Max
-                            label_rel[3] -= _y  # y_min
-                            label_rel[4] -= _y  # y_Max
-                            #print(f"label_rel {y_trav:03}_{x_trav:03} relative to frame is:\n{label_rel}")
+                        # Set relative to frame
+                        label_rel[1] -= _x  # x_min
+                        label_rel[2] -= _x  # x_Max
+                        label_rel[3] -= _y  # y_min
+                        label_rel[4] -= _y  # y_Max
+                        #print(f"label_rel {y_trav:03}_{x_trav:03} relative to frame is:\n{label_rel}")
 
-                            # YOLO format: [class x_ctr y_ctr x_width y_height]
-                            x_ctr = (label_rel[1]+label_rel[2]) /2
-                            y_ctr = (label_rel[3]+label_rel[4]) /2
-                            x_width = label_rel[2]-label_rel[1]
-                            y_height = label_rel[4]-label_rel[3]
+                        # YOLO format: [class x_ctr y_ctr x_width y_height]
+                        x_ctr = (label_rel[1]+label_rel[2]) / 2
+                        y_ctr = (label_rel[3]+label_rel[4]) / 2
+                        x_width = label_rel[2]-label_rel[1]
+                        y_height = label_rel[4]-label_rel[3]
 
-                            # Normalize to frame
-                            label_rel[1] = x_ctr/frame[0]
-                            label_rel[2] = y_ctr/frame[1]
-                            label_rel[3] = x_width/frame[0]
-                            label_rel[4] = y_height/frame[1]
-                            #print(f"label_rel {img_name}_{y_trav:03}_{x_trav:03} in norm YOLO is:\n{label_rel}")
+                        # Normalize to frame
+                        label_rel[1] = x_ctr/frame[0]
+                        label_rel[2] = y_ctr/frame[1]
+                        label_rel[3] = x_width/frame[0]
+                        label_rel[4] = y_height/frame[1]
+                        #print(f"label_rel {img_name}_{y_trav:03}_{x_trav:03} in norm YOLO is:\n{label_rel}")
 
-                            if clip_labels.all() == 0:  # if no data yet
-                                clip_labels = label_rel[:]  # first row
-                                #print(f'first row filled:\n{clip_labels}')
-                            else:
-                                clip_labels = np.vstack([clip_labels, label_rel[:]])
-                                #print(f'row added:\n{clip_labels}')
-                            #print(f"clip_labels {y_trav:03}_{x_trav:03} is:\n{clip_labels}")
+                        if clip_labels.all() == 0:  # if no data yet
+                            clip_labels = label_rel[:]  # first row
+                            #print(f'first row filled:\n{clip_labels}')
+                        else:
+                            clip_labels = np.vstack([clip_labels, label_rel[:]])
+                            #print(f'row added:\n{clip_labels}')
+                        #print(f"clip_labels {y_trav:03}_{x_trav:03} is:\n{clip_labels}")
 
-                # If no labels, make the file blank (YOLO format)
-                if clip_labels.all() == 0:
-                    clip_labels = np.array([])
-                    #print(f"Clip labels have been deleted")
+            # Convert the label array to a dataframe
+            if not clip_labels.all() == 0:
+                #print(clip_labels)
+                clip_labels_pd = pd.DataFrame(clip_labels,columns=['class','xctr','yctr','xw','yh'])
+                clip_labels_pd['class'] = clip_labels_pd['class'].map(lambda x: '%1.d' % x)  # no decimals in the 'class' column
+                print(f"Pandas frame for {img_name}_{x_trav:02}x{y_trav:02}")
+                print(clip_labels_pd)
 
-                # Write Label file
-                np.savetxt(f"{lbl_dir}/{img_name}_{y_trav:03}_{x_trav:03}.txt", np.atleast_2d(clip_labels), delimiter=' ', newline='\n', encoding=None)
+            else:  # If no labels, make the file blank (YOLO format)
+                clip_labels = np.array([])
+                clip_labels_pd = pd.DataFrame(np.atleast_2d(clip_labels))
 
-            except:
-                pass
+            # Write the label file
+            clip_labels_pd.to_csv(f"{lbl_dir}/{img_name}_{x_trav:02}x{y_trav:02}_{_x}p{_y}.txt", sep=' ', header=None, index=False,  float_format='%.6f')
+            #np.savetxt(f"{lbl_dir}/{img_name}_{x_trav:02}x{y_trav:02}_{_x}p{_y}.txt", np.atleast_2d(clip_labels), delimiter=' ', newline='\n', encoding=None)
+
+            # except:
+            #     pass
 
     #print(f"Created {int(steps[0]*steps[1])} new clipped images.")
 
@@ -408,9 +418,6 @@ def batch_clip(img_dir, **kwargs):
         batch = True  # this way one-time features will be turned off after first cycle
 
 
-# TODO allow step and overlap to be input as percentages
-
-# TODO build 'autosplit_train.txt' and 'autosplit_val.txt' for new data
 def autosplit_txt(img_dir):
 
     # find parent to dir and place new file parallel to dir
@@ -434,11 +441,14 @@ def autosplit_txt(img_dir):
     print(f"New autosplit file has been created here:\n{src_dir}")
 
 ###### Testing ######
-img = 'data_xView/10.jpg'
-lbl = 'data_xView/10.txt'
+img = 'data_testing/10.jpg'
+lbl = 'data_testing/10.txt'
 
-#clipper(image=img, frame=[512,512], labels=lbl)
-#batch_clip(img_dir='data_xView/images/train', lbl_dir = 'data_xView/labels/train', frame = [512,512], overlap=[50,50])
+clipper(image=img, frame=[512,512], labels=lbl, overlap=[50,50])
+
+##### Execution #####
+#batch_clip(img_dir='data_xView/original_images/train', lbl_dir = 'data_xView/original_labels/train', frame = [512,512], overlap=[50,50])
 #batch_clip(img_dir='data_xView/original_images/val', frame = [512,512], overlap=[50,50])
 
-autosplit_txt('data_xView/images/val')
+#autosplit_txt('data_xView/images/train')
+#autosplit_txt('data_xView/images/val')

@@ -75,6 +75,8 @@ start = time.time()
 # WARNING: Extremely small objects found. 15256 of 537243 labels are < 3 pixels in size.
 # fail on xView 30 Nov: RuntimeError: CUDA out of memory. Tried to allocate 98.00 MiB (GPU 3; 39.59 GiB total capacity; 36.46 GiB already allocated; 57.44 MiB free; 36.76 GiB reserved in total by PyTorch) If reserved memory is >> allocated memory try setting max_split_size_mb to avoid fragmentation.  See documentation for Memory Management and PYTORCH_CUDA_ALLOC_CONF
 
+# post 'coupons' splitting
+!python3 -m torch.distributed.run --nproc_per_node 4 train.py --img 512 --batch 64 --epochs 200 --data ./data_xView/xView.yaml --cfg ./models/xView_yolov5x.yaml --weights '' --name xView_coupons_yolov5x_results  --cache
 
 
 

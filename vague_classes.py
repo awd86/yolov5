@@ -86,6 +86,7 @@ names2 = [
 names3 = names2.copy()
 
 for i in range(len(names2)):
+    blah[i]=i
         if names2[i] == 1:
                 names3[i] = 'too small'
         elif names2[i] == 2:
