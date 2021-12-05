@@ -66,7 +66,7 @@ def goldilocks(lbl_dir,dest_dir,convert_dict):
             Labels_pd = pd.DataFrame(np.atleast_2d(Labels),columns=['new class','xctr','yctr','xw','yh'])
             Labels_pd['new class'] = Labels_pd['new class'].map(lambda x: '%1.d' % x)  # no decimals in the 'new class' column
 
-            print(f"Pandas frame:\n {Labels_pd}")
+            # print(f"Pandas frame:\n {Labels_pd}")
             # print(Labels_pd)
 
         else:  # If no labels, make the file blank (YOLO format)
@@ -80,7 +80,13 @@ def goldilocks(lbl_dir,dest_dir,convert_dict):
 
 
 ##### Execution #####
-goldilocks('data_testing/labels','data_testing/labels_01_stripped',convert_strip)
-goldilocks('data_testing/labels','data_testing/labels_02_goldilocks',convert_gl)
-goldilocks('data_testing/labels','data_testing/labels_03_hhg',convert_hhg)
+# goldilocks('data_testing/labels','data_testing/labels_01_stripped',convert_strip)
+# goldilocks('data_testing/labels','data_testing/labels_02_goldilocks',convert_gl)
+# goldilocks('data_testing/labels','data_testing/labels_03_hhg',convert_hhg)
 
+goldilocks('data_xView/labels/train','data_xView/labels/train_01_stripped',convert_strip)
+goldilocks('data_xView/labels/val','data_xView/labels/val_01_stripped',convert_strip)
+goldilocks('data_xView/labels/train','data_xView/labels/train_02_gl',convert_gl)
+goldilocks('data_xView/labels/val','data_xView/labels/val_02_gl',convert_gl)
+goldilocks('data_xView/labels/train','data_xView/labels/train_03_hhg',convert_hhg)
+goldilocks('data_xView/labels/val','data_xView/labels/val_03_hhg',convert_hhg)

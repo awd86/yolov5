@@ -152,12 +152,14 @@ keep_list = list(range(4,23))+list(range(39,48))+[55,57]
 
 ###### Create stripped dict ######
 convert_strip = {}
+i = 0
 for k in org_cls_num:
     if k in keep_list:
-        convert_strip[k] = k
+        convert_strip[k] = i
+        i +=1
     else:
         convert_strip[k] = None
-# print(convert_strip)
+# print(f'convert_strip list is {convert_strip}')
 
 # Make a new class name list for the yaml
 strip_classes = []

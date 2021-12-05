@@ -19,22 +19,32 @@ print('torch %s %s' % (torch.__version__, torch.cuda.get_device_properties(0) if
 # https://public.roboflow.com/ds/h0zYn5zFuK?key=tRsZIfO1Cg
 # curl -L "https://public.roboflow.com/ds/h0zYn5zFuK?key=tRsZIfO1Cg" > roboflow.zip; unzip roboflow.zip; rm roboflow.zip
 
+
+#################### Data Prep #########################
+
+import split_set
+import coupons
+import vague_classes
+import re_classify
+
+
+
 #################### Execution #########################
 
 # Define model configuration and architecture (needed in runtime):
 # define number of classes based on YAML
-import yaml
-with open(yolov5.data_car + "/data.yaml", 'r') as stream:
-    num_classes = str(yaml.safe_load(stream)['nc'])
-
-# customize iPython writefile so we can write variables
-from IPython.core.magic import register_line_cell_magic
-
-
-@register_line_cell_magic
-def writetemplate(line, cell):
-    with open(line, 'w') as f:
-        f.write(cell.format(**globals()))
+# import yaml
+# with open(yolov5.data_car + "/data.yaml", 'r') as stream:
+#     num_classes = str(yaml.safe_load(stream)['nc'])
+#
+# # customize iPython writefile so we can write variables
+# from IPython.core.magic import register_line_cell_magic
+#
+#
+# @register_line_cell_magic
+# def writetemplate(line, cell):
+#     with open(line, 'w') as f:
+#         f.write(cell.format(**globals()))
 
 # Train Custom YOLOv5 Detector - Next, we'll fire off training!
 # Here, we are able to pass a number of arguments:
@@ -55,8 +65,11 @@ def writetemplate(line, cell):
 # %cd /content/yolov5/
 #!python train.py --img 416 --batch 16 --epochs 100 --data {dataset.location}/data.yaml --cfg ./models/custom_yolov5s.yaml --weights '' --name yolov5s_results  --cache
 
-import time
-start = time.time()
+# import time
+# start = time.time()
+
+
+
 
 # copy/paste this into the terminal
 !python3 train.py --img 512 --batch 16 --epochs 200 --data ./data_car_small_sub/data.yaml --cfg ./models/customCAR_yolov5x.yaml --weights '' --name yolov5x_DGX4_results  --cache
@@ -77,6 +90,10 @@ start = time.time()
 
 # post 'coupons' splitting
 !python3 -m torch.distributed.run --nproc_per_node 4 train.py --img 512 --batch 64 --epochs 200 --data ./data_xView/xView.yaml --cfg ./models/xView_yolov5x.yaml --weights '' --name xView_coupons_yolov5x_results  --cache
+
+# post 'hhg' splitting
+!python3 -m torch.distributed.run --nproc_per_node 4 train.py --img 512 --batch 64 --epochs 200 --data ./data_xView/xView_hhg.yaml --cfg ./models/xView_hhg_yolov5x.yaml --weights '' --name xView_hhg_yolov5x_results  --cache
+
 
 
 

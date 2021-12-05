@@ -14,8 +14,8 @@ train: /home/st1/PycharmProjects/yolov5/data_xView/images/autosplit_train.txt  #
 val: /home/st1/PycharmProjects/yolov5/data_xView/images/autosplit_val.txt  # train images (relative to 'path') 10% of 847 train images
 
 # Classes
-nc: 30  # number of classes
-names: ['Passenger Vehicle', 'Small Car', 'Bus', 'Pickup Truck', 'Utility Truck', 'Truck', 'Cargo Truck', 'Truck w/Box',
+nc: 31  # number of classes
+names: ['no name','Passenger Vehicle', 'Small Car', 'Bus', 'Pickup Truck', 'Utility Truck', 'Truck', 'Cargo Truck', 'Truck w/Box',
         'Truck Tractor', 'Trailer', 'Truck w/Flatbed', 'Truck w/Liquid', 'Crane Truck', 'Railway Vehicle',
         'Passenger Car', 'Cargo Car', 'Flat Car', 'Tank car', 'Locomotive', 'Dump Truck', 'Haul Truck',
         'Scraper/Tractor', 'Front loader/Bulldozer', 'Excavator', 'Cement Mixer', 'Ground Grader', 'Hut/Tent',

@@ -14,8 +14,8 @@ train: /home/st1/PycharmProjects/yolov5/data_xView/images/autosplit_train.txt  #
 val: /home/st1/PycharmProjects/yolov5/data_xView/images/autosplit_val.txt  # train images (relative to 'path') 10% of 847 train images
 
 # Classes
-nc: 3  # number of classes
-names: ['too small','just right','too big']  # class names
+nc: 4  # number of classes
+names: ['no name','too small','just right','too big']  # class names
 
 
 # Download script/URL (optional) ---------------------------------------------------------------------------------------
