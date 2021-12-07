@@ -452,35 +452,35 @@ def autosplit_txt(img_dir):
 ##### Execution #####
 
 # training data
-batch_clip(img_dir='data_xView/original_images/train', lbl_dir='data_xView/original_labels/train', frame=[512,512], overlap=[50,50])
-print(f"Training data clipped.\n")
-
-if not os.path.exists('data_xView/images'):
-    os.mkdir('data_xView/images')
-if not os.path.exists('data_xView/labels'):
-    os.mkdir('data_xView/labels')
-
-os.rename(f'data_xView/original_images/train/images', f'data_xView/images/train')
-os.rename(f'data_xView/original_images/train/labels', f'data_xView/labels/train')
-print(f"Training folders moved and renamed.\n")
-
-# testing data
-batch_clip(img_dir='data_xView/original_images/test', lbl_dir='data_xView/original_labels/test', frame=[512,512], overlap=[50,50])
-print(f"Testing data clipped.\n")
-
-os.rename(f'data_xView/original_images/test/images', f'data_xView/images/val')  # retitle to 'val'
-os.rename(f'data_xView/original_images/test/labels', f'data_xView/labels/val')
-print(f"Testing folders moved and renamed.\n")
-
-# validation data (no labels)
-batch_clip(img_dir='data_xView/original_images/val', frame=[512,512], overlap=[50,50])
-print(f"Validation data clipped")
-
-os.rename(f'data_xView/original_images/val/images', f'data_xView/images/test')  # retitle to 'test'
-print("Validation folders moved and renamed.\n")
-
-# required files
-autosplit_txt('data_xView/images/train')
-autosplit_txt('data_xView/images/test')
-autosplit_txt('data_xView/images/val')
-print(f"Autosplit creation complete.\n Processing done!")
+# batch_clip(img_dir='data_xView/original_images/train', lbl_dir='data_xView/original_labels/train', frame=[512,512], overlap=[50,50])
+# print(f"Training data clipped.\n")
+#
+# if not os.path.exists('data_xView/images'):
+#     os.mkdir('data_xView/images')
+# if not os.path.exists('data_xView/labels'):
+#     os.mkdir('data_xView/labels')
+#
+# os.rename(f'data_xView/original_images/train/images', f'data_xView/images/train')
+# os.rename(f'data_xView/original_images/train/labels', f'data_xView/labels/train')
+# print(f"Training folders moved and renamed.\n")
+#
+# # testing data
+# batch_clip(img_dir='data_xView/original_images/test', lbl_dir='data_xView/original_labels/test', frame=[512,512], overlap=[50,50])
+# print(f"Testing data clipped.\n")
+#
+# os.rename(f'data_xView/original_images/test/images', f'data_xView/images/val')  # retitle to 'val'
+# os.rename(f'data_xView/original_images/test/labels', f'data_xView/labels/val')
+# print(f"Testing folders moved and renamed.\n")
+#
+# # validation data (no labels)
+# batch_clip(img_dir='data_xView/original_images/val', frame=[512,512], overlap=[50,50])
+# print(f"Validation data clipped")
+#
+# os.rename(f'data_xView/original_images/val/images', f'data_xView/images/test')  # retitle to 'test'
+# print("Validation folders moved and renamed.\n")
+#
+# # required files
+# autosplit_txt('data_xView/images/train')
+# autosplit_txt('data_xView/images/test')
+# autosplit_txt('data_xView/images/val')
+# print(f"Autosplit creation complete.\n Processing done!")

@@ -166,6 +166,7 @@ strip_classes = []
 for k in keep_list:
     strip_classes.append(org_cls_names[k])
 # print(strip_classes)
+print(f'Stripped contains {len(strip_classes)} distinct classes')
 
 
 ###### create goldilocks dict ######
@@ -176,6 +177,7 @@ for k in convert_strip.keys():
     else:
         convert_gl[k] = None
 # print(convert_gl)
+print(f'Goldilocks contains {sum(x is not None for x in list(convert_gl.values()))} sets aggregated into 3 classes')
 
 ###### create holyHandGrenade dict ######
 convert_hhg = {}
@@ -185,3 +187,4 @@ for k in convert_gl.keys():
     else:
         convert_hhg[k] = None
 # print(convert_hhg)
+print(f'HHG contains {sum(x is not None for x in list(convert_hhg.values()))} sets aggregated into 1 class')

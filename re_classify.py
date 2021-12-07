@@ -79,14 +79,15 @@ def goldilocks(lbl_dir,dest_dir,convert_dict):
     print(f'\n{len(label_files)} files converted to goldilocks values.')
 
 
-##### Execution #####
+##### Testing #####
 # goldilocks('data_testing/labels','data_testing/labels_01_stripped',convert_strip)
 # goldilocks('data_testing/labels','data_testing/labels_02_goldilocks',convert_gl)
 # goldilocks('data_testing/labels','data_testing/labels_03_hhg',convert_hhg)
 
-goldilocks('data_xView/labels/train','data_xView/labels/train_01_stripped',convert_strip)
-goldilocks('data_xView/labels/val','data_xView/labels/val_01_stripped',convert_strip)
-goldilocks('data_xView/labels/train','data_xView/labels/train_02_gl',convert_gl)
-goldilocks('data_xView/labels/val','data_xView/labels/val_02_gl',convert_gl)
-goldilocks('data_xView/labels/train','data_xView/labels/train_03_hhg',convert_hhg)
-goldilocks('data_xView/labels/val','data_xView/labels/val_03_hhg',convert_hhg)
+##### Execution #####
+# goldilocks('data_xView/labels/train','data_xView/labels/train_01_stripped',convert_strip)
+# goldilocks('data_xView/labels/val','data_xView/labels/val_01_stripped',convert_strip)
+# goldilocks('data_xView/labels/train','data_xView/labels/train_02_gl',convert_gl)
+# goldilocks('data_xView/labels/val','data_xView/labels/val_02_gl',convert_gl)
+# goldilocks('data_xView/labels/train','data_xView/labels/train_03_hhg',convert_hhg)
+# goldilocks('data_xView/labels/val','data_xView/labels/val_03_hhg',convert_hhg)

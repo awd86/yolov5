@@ -45,4 +45,4 @@ def split_set(src_dir,testing):
     
 
 ##### Execution #####
-split_set('data_xView',0.2)
+# split_set('data_xView',0.2)
