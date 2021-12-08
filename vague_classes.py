@@ -1,4 +1,5 @@
 import numpy as np
+import os
 
 
 org_cls_names = [
@@ -122,7 +123,62 @@ new_cls_num = [
          3,
          3,
 ]
+new_cls_num = [x-1 for x in new_cls_num]  #reset to 0-biased
 
+
+# Doing this the correct way - based on mean bbox size by class label
+def mean_class_bbox(label_dir,class_stops,class_names):
+    # 'label_dir' is the directory containing the YOLO-format label files
+    #       - if mustiple directories are provided as a list, it will iterate through all of them
+    # 'class_stops' is a list specifying aggregated class endstops (where one stops and anther begins
+    #       - if 3 numbers are specified in 'classes' then 4 classes will be created: [0,1,2,3]
+    #       - values may be passes as type int or list. If type int, the int will be used as both [x,y]
+    # 'class_names' is a list specifying names for the new aggregate classes.
+    #       - needs to have 1 more value than class_stops (3 stops becomes 4 aggregate classes)
+
+    # Check 'class_name' and 'class_stop' sizes
+    try:
+        if not len(class_names)%len(class_stops) == 1:
+            print(f"'class_names' needs to have 1 more value than 'class_stops'\ne.g. 3 stops creates 4 classes\n")
+            print(f'{len(class_names)} class names provided, {len(class_stops)} class stops provided')
+            return  # exit the entire function after this error b/c 'mean_class_bbox' cannot be completed
+    except:
+        print("Formating error in 'class_stops' or 'class_names' argument to 'mean_class_bbox()'")
+        print(f"please check that there are type 'list':\ntype of 'class_names': {type(class_names)}\ntype of 'class_stops': {type(class_stops)}")
+        return
+
+    # Handle 'class_stop' type and size
+    if type(class_stops) == int:
+        class_stops = [[x,x] for x in class_stops]
+    elif not type(class_stops) == list:
+        print(f"Formating error in 'class_stops' argument to 'mean_class_bbox()'\nshowing type: {type(class_stops)}")
+        return
+
+    # Handle 'label_dir' inputs
+    if type(label_dir) == list:
+        for x in label_dir:
+            concat_files(x)
+    elif type(label_dir) == str:
+        concat_files(label_dir)
+    else:
+        print(f"'label_dir' needs to be passed into 'mean_class_bbox()' as a str or list:\ntype of 'label_dir': {type(label_dir)}")
+        return  # exit the function because cannot be calculated
+
+    # discover old classes, save as key in old_cls{}
+    # track mean [x,y] dimensions, save as value in old_cls{}
+
+
+
+def concat_files(dir):
+    label_files = []
+    try:
+        for file in os.listdir(path=f'{dir}'):  # ["[image number].tif",...]
+            if file.endswith('.txt'):
+                label_files.append(f'{dir}/{file}')
+    except:
+        print("Check 'label_dir' argument to 'mean_class_bbox()'")
+        return  # exit the function because cannot be calculated
+    return label_files
 
 
 new_cls_name = new_cls_num.copy()
