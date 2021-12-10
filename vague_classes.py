@@ -1,5 +1,7 @@
 import numpy as np
 import os
+import warnings
+
 
 
 org_cls_names = [
@@ -50,7 +52,6 @@ org_cls_names = [
     'Pylon',
     'Tower',
 ]
-
 # print(org_cls_names)
 
 '''
@@ -125,51 +126,138 @@ new_cls_num = [
 ]
 new_cls_num = [x-1 for x in new_cls_num]  #reset to 0-biased
 
-
+# TODO implement 'aggregate'
 # Doing this the correct way - based on mean bbox size by class label
-def mean_class_bbox(label_dir,class_stops,class_names):
+def aggregate(label_dir,method,**kwargs):
     # 'label_dir' is the directory containing the YOLO-format label files
-    #       - if mustiple directories are provided as a list, it will iterate through all of them
-    # 'class_stops' is a list specifying aggregated class endstops (where one stops and anther begins
+    #       - if multiple directories are provided as a list, it will iterate through all of them
+    # 'method' specifies the way in which to aggregate
+    #       - 'xMean' will find the mean of x_width in YOLO format across all label instances in label_dir
+    # kwargs:
+    # 'class_stops' (method = xMean) is a list of int specifying aggregated class endstops (where one stops and another begins)
     #       - if 3 numbers are specified in 'classes' then 4 classes will be created: [0,1,2,3]
-    #       - values may be passes as type int or list. If type int, the int will be used as both [x,y]
-    # 'class_names' is a list specifying names for the new aggregate classes.
+    #       - values must be passes as type int. There is no way to prioritize x or y if they are different.
+    #       - #### the program will only use 'x' values ####
+    # 'class_names' (method = xMean) is a list specifying names for the new aggregate classes.
     #       - needs to have 1 more value than class_stops (3 stops becomes 4 aggregate classes)
-
-    # Check 'class_name' and 'class_stop' sizes
-    try:
-        if not len(class_names)%len(class_stops) == 1:
-            print(f"'class_names' needs to have 1 more value than 'class_stops'\ne.g. 3 stops creates 4 classes\n")
-            print(f'{len(class_names)} class names provided, {len(class_stops)} class stops provided')
-            return  # exit the entire function after this error b/c 'mean_class_bbox' cannot be completed
-    except:
-        print("Formating error in 'class_stops' or 'class_names' argument to 'mean_class_bbox()'")
-        print(f"please check that there are type 'list':\ntype of 'class_names': {type(class_names)}\ntype of 'class_stops': {type(class_stops)}")
-        return
-
-    # Handle 'class_stop' type and size
-    if type(class_stops) == int:
-        class_stops = [[x,x] for x in class_stops]
-    elif not type(class_stops) == list:
-        print(f"Formating error in 'class_stops' argument to 'mean_class_bbox()'\nshowing type: {type(class_stops)}")
-        return
 
     # Handle 'label_dir' inputs
     if type(label_dir) == list:
         for x in label_dir:
-            concat_files(x)
+            label_files = concat_files(x)
     elif type(label_dir) == str:
-        concat_files(label_dir)
+        label_files = concat_files(label_dir)
     else:
         print(f"'label_dir' needs to be passed into 'mean_class_bbox()' as a str or list:\ntype of 'label_dir': {type(label_dir)}")
         return  # exit the function because cannot be calculated
 
-    # discover old classes, save as key in old_cls{}
-    # track mean [x,y] dimensions, save as value in old_cls{}
+    # Handle method and kwargs
+    if method == 'xMean':
+
+        # Check 'class_name' and 'class_stop' exist
+        try:
+            class_stops = kwargs['class_stops']
+            class_names = kwargs['class_names']
+        except:
+            print(f"Insufficent specification for method:xMean. Requires 'class_stops' and 'class_names'")
+
+        # Check 'class_name' and 'class_stop' sizes
+        try:
+            if not len(class_names)%len(class_stops) == 1:
+                print(f"'class_names' needs to have 1 more value than 'class_stops'\ne.g. 3 stops creates 4 classes\n")
+                print(f'{len(class_names)} class names provided, {len(class_stops)} class stops provided')
+                return  # exit the entire function after this error b/c 'mean_class_bbox' cannot be completed
+        except:
+            print("Formating error in 'class_stops' or 'class_names' argument to 'mean_class_bbox()'")
+            print(f"please check that there are type 'list':\ntype of 'class_names': {type(class_names)}\ntype of 'class_stops': {type(class_stops)}")
+            return
+
+        # Handle 'class_stop' type and size  #### only using x dimension ####
+        if type(class_stops[0]) == int or float:
+            # class_stops = [[x,x] for x in class_stops]
+            # 'class_stops' can only accept x-values for xMean (unless upgraded)
+            pass
+        else:
+            print(f"Formating error in 'class_stops' argument to 'mean_class_bbox(). Only accepts list of int or float.'\nshowing type of class_stops[0]: {type(class_stops[0])}")
+            return
+
+        # Find xMean
+        old_cls,old_xMean = label_Mean(label_files,3)
+        print(f'Original Class Instances:\n{old_cls}')
+        print(f'Average x_width by Class:\n{old_xMean}')
+
+        # Re-Classify by xMean with 'class_stops'
+        new_cls = {}
+        class_stops = [0] + class_stops + [math.inf]  # properly buffer the list of stops for >v>=
+
+        for cls in range(len(class_stops)-1):
+            new_cls.update({k:cls for (k,v) in old_xMean.items() if class_stops[cls + 1] > v >= class_stops[cls]})  # dictionary comprehension
+
+        print(f'Aggregated class substitutions:\n{new_cls}')
+
+        # Create dict associating class_names with aggregated classes
+        old_names = {k: class_names[new_cls[k]] for k in old_cls.keys()}
+        print(f"Old name associations are:\n{old_names}")
+        new_names = {k:class_names[k] for k in range(len(class_names))}
+        print(f"New name associations are:\n{new_names}")
 
 
+        return new_cls  # the only required return is the old_class:new_class associations in 'new_cls'
+
+
+    else:  # method and kwargs
+        print(f'Aggregation method {method} not specified')
+
+def label_Mean(label_files, col):
+    # Based on a list 'label_files', this opens the files and reads class and x_width data
+    # Recorded data is then stored as class_num:[sum(x_width),count(x_width)]
+    # Returns old_xMean = class_num:(sum(x_width)/count(x_width)); old_cls = class_num:count(x_width)
+
+    # Discover old class names, save as key in old_cls{}
+    old_cls = {}
+    for _label in label_files:
+
+        # load labels
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            try:
+                labels = np.genfromtxt(_label, delimiter=None, )
+            except:
+                continue
+
+            if len(labels) == 0:  # if no labels, skip the remainder
+                continue
+
+        labels = np.atleast_2d(labels)
+
+        try:
+            for i in range(len(labels[:, 0])):  # iterates through all entries in 'labels'
+                i = int(i)
+                cls = labels[i, 0]
+                if not cls in old_cls.keys():  # check for cls present in old_cls
+                    old_cls[int(cls)] = [labels[i, col],
+                                         1]  # x_width; method is the column of the label file (usually 3=x_width)
+                else:
+                    old_cls[cls] = [old_cls[cls][0] + labels[i, col],
+                                    old_cls[cls][1] + 1]  # store [sum,inst] for later division
+        except:
+            print(f"labels failed:\n {labels}")
+
+    # _old_cls = pd.DataFrame.from_dict(old_cls,orient='index', columns=['sum x_width','instances'])
+    # print(f'Original Classes:\n{_old_cls}')
+
+    # Calculates the Mean
+    old_xMean = {}
+    for cls in old_cls.keys():
+        old_xMean[cls] = old_cls[cls][0] / old_cls[cls][1]  # find the mean for each class
+        old_cls[cls] = old_cls[cls][1]  # save the instances
+    # print(f'Original Class Instances:\n{old_cls}')
+    # print(f'Average x_width by Class:\n{old_xMean}')
+    #
+    return (old_cls, old_xMean)
 
 def concat_files(dir):
+    # creates a list of the names of all label files (all files, really) in 'dir' that end in '*.txt'
     label_files = []
     try:
         for file in os.listdir(path=f'{dir}'):  # ["[image number].tif",...]
@@ -234,6 +322,7 @@ for k in convert_strip.keys():
         convert_gl[k] = None
 # print(convert_gl)
 print(f'Goldilocks contains {sum(x is not None for x in list(convert_gl.values()))} sets aggregated into 3 classes')
+
 
 ###### create holyHandGrenade dict ######
 convert_hhg = {}
