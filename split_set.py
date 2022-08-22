@@ -1,7 +1,17 @@
+##########################
+# by/for Alex Denton, thesis work
+# last modified 2 Aug 2022
+##########################
+
+
 import os
 
 
 def split_set(src_dir,testing):
+    '''
+    param: src_dir: Where to find the dataset to modify. 
+    param: testing: Percent of images reserved for validation (test). 
+    '''
     
     # Gather Image Files
     image_files = []
