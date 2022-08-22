@@ -1,6 +1,6 @@
 ##########################
 # by/for Alex Denton, thesis work
-# last modified 2 Aug 2022
+# last modified 21 Aug 2022
 ##########################
 
 """
@@ -13,6 +13,7 @@ https://blog.paperspace.com/train-yolov5-custom-data/
 import os
 import random
 import shutil  # for the copy command
+import yaml
 
 
 def split_set(src_dir, split=[0.8, 0.1, 0.1], method='rand'):
@@ -100,8 +101,15 @@ def split_set(src_dir, split=[0.8, 0.1, 0.1], method='rand'):
 
     # update data.yaml with new directories
     update_yaml(src_dir)
+    
+    # remove empty folders
+    try:
+        os.rmdir(f'{src_dir}/labels')
+        os.rmdir(f'{src_dir}/images')
+    except:
+        print(f'Unable to delete empty folders in {src_dir}')
                 
-    print('The move is complete')
+    print(f'The {src_dir} move is complete')
     
     
     
@@ -110,12 +118,13 @@ def update_yaml(src_dir):
     
     # Find list of all classes to put in data.yaml (this will ONLY work if the yaml was saved during image creation)
     with open(f'{src_dir}/data.yaml', 'r') as old_yaml:
+        data  = yaml.full_load(old_yaml)
         nc = data.get('nc')
         names = data.get('names')
 
     # Create/Overwrite YAML File
-    with open(f'{src_dir}/data.yaml', 'w') as yaml:
-        yaml.write('\n'.join([
+    with open(f'{src_dir}/data.yaml', 'w') as new_yaml:
+        new_yaml.write('\n'.join([
 
             'train: ' + f'{src_dir}/train/images',
             'val: ' + f'{src_dir}/val/images',
@@ -131,7 +140,7 @@ def update_yaml(src_dir):
 
 ##### Execution #####
 if __name__ == '__main__':
-    src_dir = os.path('ChipCharTest/Set1_M35_2s1_M1/chips_05_black')
+    src_dir = 'Set1_M35_2s1_M1/chips_05_black'
     split_set(src_dir)
     #update_yaml(src_dir)
 
