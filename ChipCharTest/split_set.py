@@ -45,11 +45,14 @@ def split_set(src_dir, split=[0.8, 0.1, 0.1], method='rand'):
     levels = ['train', 'val', 'test']
 
     for m in levels:
-        if not os.path.exists(f'{src_dir}/images/{m}'):
-            os.mkdir(f'{src_dir}/images/{m}')
+        if not os.path.exists(f'{src_dir}/{m}'):
+            os.mkdir(f'{src_dir}/{m}')
+            
+        if not os.path.exists(f'{src_dir}/{m}/images'):
+            os.mkdir(f'{src_dir}/{m}/images')
 
-        if not os.path.exists(f'{src_dir}/labels/{m}'):
-            os.mkdir(f'{src_dir}/labels/{m}')
+        if not os.path.exists(f'{src_dir}/{m}/labels'):
+            os.mkdir(f'{src_dir}/{m}/labels')
 
 
     # Handle 'split'
@@ -83,11 +86,11 @@ def split_set(src_dir, split=[0.8, 0.1, 0.1], method='rand'):
             # Move Image File
             if image_files[_image] in label_files:  # only move files with a corresponding label
                 shutil.move(f'{src_dir}/images/{image_files[_image]}.{type}',
-                          f'{src_dir}/images/{level}/{image_files[_image]}.{type}')
+                          f'{src_dir}/{level}/images/{image_files[_image]}.{type}')
                 #print(f"moved image {_image}")
                 # Move Label File
                 shutil.move(f'{src_dir}/labels/{image_files[_image]}.txt',
-                          f'{src_dir}/labels/{level}/{image_files[_image]}.txt')
+                          f'{src_dir}/{level}/labels/{image_files[_image]}.txt')
                 # Remove from set
                 image_files.pop(_image)
 
@@ -95,8 +98,40 @@ def split_set(src_dir, split=[0.8, 0.1, 0.1], method='rand'):
                 print(f"{image_files[_image]} not found in labels")
                 image_files.pop(_image)  # remove from set to prevent recurring error
 
+    # update data.yaml with new directories
+    update_yaml(src_dir)
+                
     print('The move is complete')
+    
+    
+    
+# Overwrite the data.yaml file
+def update_yaml(src_dir):
+    
+    # Find list of all classes to put in data.yaml (this will ONLY work if the yaml was saved during image creation)
+    with open(f'{src_dir}/data.yaml', 'r') as old_yaml:
+        nc = data.get('nc')
+        names = data.get('names')
+
+    # Create/Overwrite YAML File
+    with open(f'{src_dir}/data.yaml', 'w') as yaml:
+        yaml.write('\n'.join([
+
+            'train: ' + f'{src_dir}/train/images',
+            'val: ' + f'{src_dir}/val/images',
+            'test: ' + f'{src_dir}/test/images',
+
+            '\n',
+            'nc: ' + str(nc),
+            'names: ' + str(names),
+            ]))
+        
+        
     
 
 ##### Execution #####
-split_set('Set1_M35_2s1_M1/chips_05_black')
+if __name__ == '__main__':
+    src_dir = os.path('ChipCharTest/Set1_M35_2s1_M1/chips_05_black')
+    split_set(src_dir)
+    #update_yaml(src_dir)
+
