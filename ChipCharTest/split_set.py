@@ -12,6 +12,7 @@ https://blog.paperspace.com/train-yolov5-custom-data/
 
 import os
 import random
+import shutil  # for the copy command
 
 
 def split_set(src_dir, split=[0.8, 0.1, 0.1], method='rand'):
@@ -23,36 +24,34 @@ def split_set(src_dir, split=[0.8, 0.1, 0.1], method='rand'):
 
     Returns: Outputs in file structure
     """
-    
+
     # Gather Image Files
     image_files = []
     for _file in os.listdir(path=f'{src_dir}/images/'):  # ["[image number].tif",...]
-        if _file.endswith('.tif' or '.jpg' or '.png'):
-            image_files.append(_file.split('.')[0])  # remove suffix
+        if _file.endswith('.png'):
+            image_files.append(_file[0:-4])  # remove suffix
             type = _file.split('.')[-1]  # but keep track of the suffix (assumes they're all the same...)
 
     # Gather Label Files
     label_files = []
     for _file in os.listdir(path=f'{src_dir}/labels/'):  # ["[image number].txt",...]
         if _file.endswith('.txt'):
-            label_files.append(_file.split('.')[0])  # remove suffix
-            
-    # Create Six Directories
-    if not os.path.exists(f'{src_dir}/images/train'):
-        os.mkdir(f'{src_dir}/images/train')
-    if not os.path.exists(f'{src_dir}/images/val'):
-        os.mkdir(f'{src_dir}/images/val')    
-    if not os.path.exists(f'{src_dir}/images/test'):
-        os.mkdir(f'{src_dir}/images/test')
-        
-    if not os.path.exists(f'{src_dir}/labels/train'):
-        os.mkdir(f'{src_dir}/labels/train')
-    if not os.path.exists(f'{src_dir}/labels/val'):
-        os.mkdir(f'{src_dir}/labels/val')    
-    if not os.path.exists(f'{src_dir}/labels/test'):
-        os.mkdir(f'{src_dir}/labels/test')
+            label_files.append(_file[0:-4])  # remove suffix
 
-            
+    #print(f'labels:\n{image_files[0:2]}')
+    #print(f'labels:\n{label_files[0:2]}')
+
+    # Create Six Directories
+    levels = ['train', 'val', 'test']
+
+    for m in levels:
+        if not os.path.exists(f'{src_dir}/images/{m}'):
+            os.mkdir(f'{src_dir}/images/{m}')
+
+        if not os.path.exists(f'{src_dir}/labels/{m}'):
+            os.mkdir(f'{src_dir}/labels/{m}')
+
+
     # Handle 'split'
     if split[0] >= 1 and split[0] <101:  # train is percent, not fraction
         split = [x/100 for x in split]
@@ -62,40 +61,42 @@ def split_set(src_dir, split=[0.8, 0.1, 0.1], method='rand'):
             split[2] = split[0] - split[1]  # if the numbers don't add up, take it out on the 'test' portion
         split = [x/len_split for x in split]
 
-            
+
     # Move Files
+    moves = [int(x*len(image_files)) for x in split]
+    moves[2] = len(image_files)-moves[0]-moves[1]  # make sure no one is left out
     for m in range(3):
-        levels = ['train','val','test']
         level = levels[m]
 
-        for image in range(int( split[m]*len(image_files) )):
+        for image in range(moves[m]):
 
             # Determine which image to move based on 'method'
             if method == 'basic' or m == 2:  # all 'test' images are leftovers
                 _image = 0  # will always take the first item in image_files as it is consumed
             elif method == 'rand':
-                _image = random.randint(len(image_files))  # image_files is getting smaller as they're consumed
+                _image = random.randint(0, len(image_files)-1)  # image_files is getting smaller as they're consumed
             elif method == 'cross':
                 print('Cross-Validation method has not been built. Reverting to random method.')
-                _image = random.randint(len(image_files))  # image_files is getting smaller as they're consumed
+                _image = random.randint(0, len(image_files)-1)  # image_files is getting smaller as they're consumed
                 method = 'rand'  # fix it for next time 'round the loop
 
             # Move Image File
             if image_files[_image] in label_files:  # only move files with a corresponding label
-                os.rename(f'{src_dir}/images/{image_files[_image]}.{type}',
+                shutil.move(f'{src_dir}/images/{image_files[_image]}.{type}',
                           f'{src_dir}/images/{level}/{image_files[_image]}.{type}')
+                #print(f"moved image {_image}")
                 # Move Label File
-                os.rename(f'{src_dir}/labels/{image_files[_image]}.txt',
+                shutil.move(f'{src_dir}/labels/{image_files[_image]}.txt',
                           f'{src_dir}/labels/{level}/{image_files[_image]}.txt')
                 # Remove from set
                 image_files.pop(_image)
 
             else:
-                print(f"{image_files[_image]}not found in labels")
+                print(f"{image_files[_image]} not found in labels")
                 image_files.pop(_image)  # remove from set to prevent recurring error
 
     print('The move is complete')
     
 
 ##### Execution #####
-# split_set('data_xView',0.2)
+split_set('Set1_M35_2s1_M1/chips_05_black')
