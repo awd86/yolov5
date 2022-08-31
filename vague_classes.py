@@ -303,13 +303,15 @@ for k in org_cls_num:
         i +=1
     else:
         convert_strip[k] = None
-# print(f'convert_strip list is {convert_strip}')
+#print(f'Stripper:   {convert_strip}')
+for k , v in convert_strip.items(): # iterating freqa dictionary
+    print(f'{k:<4} {v}')
 
 # Make a new class name list for the yaml
 strip_classes = []
 for k in keep_list:
     strip_classes.append(org_cls_names[k])
-# print(strip_classes)
+#print(strip_classes)
 print(f'Stripped contains {len(strip_classes)} distinct classes')
 
 
@@ -320,7 +322,9 @@ for k in convert_strip.keys():
         convert_gl[k] = new_cls_num[k]
     else:
         convert_gl[k] = None
-# print(convert_gl)
+#print(f'Goldilocks: {convert_gl}')
+for k , v in convert_gl.items(): # iterating freqa dictionary
+    print(f'{k:<4} {v}')
 print(f'Goldilocks contains {sum(x is not None for x in list(convert_gl.values()))} sets aggregated into 3 classes')
 
 
@@ -331,5 +335,7 @@ for k in convert_gl.keys():
         convert_hhg[k] = 1
     else:
         convert_hhg[k] = None
-# print(convert_hhg)
+#print(f'HHG:        {convert_hhg}')
+for k , v in convert_hhg.items(): # iterating freqa dictionary
+    print(f'{k:<4} {v}')
 print(f'HHG contains {sum(x is not None for x in list(convert_hhg.values()))} sets aggregated into 1 class')
